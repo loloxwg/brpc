@@ -20,6 +20,7 @@ project(echo_c++ C CXX)
 
 option(LINK_SO "Whether examples are linked dynamically" OFF)
 
+# add third party brpc
 add_subdirectory(brpc)
 
 #execute_process(
@@ -37,10 +38,10 @@ include_directories(${CMAKE_CURRENT_BINARY_DIR})
 
 # Search for libthrift* by best effort. If it is not found and brpc is
 # compiled with thrift protocol enabled, a link error would be reported.
-find_library(THRIFT_LIB NAMES thrift)
-if (NOT THRIFT_LIB)
-    set(THRIFT_LIB "")
-endif ()
+#find_library(THRIFT_LIB NAMES thrift)
+#if (NOT THRIFT_LIB)
+#    set(THRIFT_LIB "")
+#endif ()
 
 #find_path(BRPC_INCLUDE_PATH NAMES brpc/server.h)
 #if (LINK_SO)
@@ -70,28 +71,21 @@ if (${GFLAGS_NS} STREQUAL "GFLAGS_NAMESPACE")
             OUTPUT_VARIABLE GFLAGS_NS
     )
 endif ()
-if (CMAKE_SYSTEM_NAME STREQUAL "Darwin")
-    include(CheckFunctionExists)
-    CHECK_FUNCTION_EXISTS(clock_gettime HAVE_CLOCK_GETTIME)
-    if (NOT HAVE_CLOCK_GETTIME)
-        set(DEFINE_CLOCK_GETTIME "-DNO_CLOCK_GETTIME_IN_MAC")
-    endif ()
-endif ()
 
 set(CMAKE_CPP_FLAGS "${DEFINE_CLOCK_GETTIME} -DGFLAGS_NS=${GFLAGS_NS}")
 set(CMAKE_CXX_FLAGS "${CMAKE_CPP_FLAGS} -DNDEBUG -O2 -D__const__=__unused__ -pipe -W -Wall -Wno-unused-parameter -fPIC -fno-omit-frame-pointer")
 
-if (CMAKE_VERSION VERSION_LESS "3.1.3")
-    if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
-    endif ()
-    if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
-    endif ()
-else ()
-    set(CMAKE_CXX_STANDARD 11)
-    set(CMAKE_CXX_STANDARD_REQUIRED ON)
-endif ()
+#if (CMAKE_VERSION VERSION_LESS "3.1.3")
+#    if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+#        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
+#    endif ()
+#    if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+#        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
+#    endif ()
+#else ()
+#    set(CMAKE_CXX_STANDARD 11)
+#    set(CMAKE_CXX_STANDARD_REQUIRED ON)
+#endif ()
 
 find_path(LEVELDB_INCLUDE_PATH NAMES leveldb/db.h)
 find_library(LEVELDB_LIB NAMES leveldb)
@@ -116,23 +110,10 @@ set(DYNAMIC_LIB
         ${LEVELDB_LIB}
         ${OPENSSL_CRYPTO_LIBRARY}
         ${OPENSSL_SSL_LIBRARY}
-        ${THRIFT_LIB}
+        #        ${THRIFT_LIB}
         dl
 )
 
-if (CMAKE_SYSTEM_NAME STREQUAL "Darwin")
-    set(DYNAMIC_LIB ${DYNAMIC_LIB}
-            pthread
-            "-framework CoreFoundation"
-            "-framework CoreGraphics"
-            "-framework CoreData"
-            "-framework CoreText"
-            "-framework Security"
-            "-framework Foundation"
-            "-Wl,-U,_MallocExtension_ReleaseFreeMemory"
-            "-Wl,-U,_ProfilerStart"
-            "-Wl,-U,_ProfilerStop")
-endif ()
 
 add_executable(echo_client client.cpp ${PROTO_SRC} ${PROTO_HEADER})
 add_executable(echo_server server.cpp ${PROTO_SRC} ${PROTO_HEADER})
